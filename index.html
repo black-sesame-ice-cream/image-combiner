@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Combiner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js" defer></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* ドラッグオーバー時のスタイル */
+        .drag-over {
+            border-color: #3b82f6; /* blue-500 */
+            background-color: #1e293b; /* slate-800 */
+        }
+        /* スクロールバーのスタイル */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; 
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-gray-300 min-h-screen p-4 sm:p-8">
+
+    <div class="max-w-screen-2xl mx-auto">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-white mb-2">Image Combiner</h1>
+            <p class="text-slate-400 text-sm">画像をアップロードして、好きな長さまで繋げて保存</p>
+        </header>
+
+        <div class="flex flex-col lg:flex-row gap-6">
+
+            <!-- 左カラム: 素材管理 (入力 & プール) -->
+            <div class="lg:w-1/3 flex flex-col gap-6 shrink-0">
+
+                <!-- ドロップゾーン -->
+                <div id="drop-zone" class="border-4 border-dashed border-slate-700 rounded-lg p-6 text-center cursor-pointer hover:border-blue-600 hover:bg-slate-800 h-64 flex flex-col transition-colors">
+                    <input type="file" id="file-input" multiple accept="image/jpeg,image/png,image/webp,image/bmp,image/heic,image/heif,image/gif" class="hidden">
+                    <label for="file-input" class="cursor-pointer flex flex-col items-center justify-center h-full w-full">
+                        <svg class="mx-auto h-10 w-10 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                        </svg>
+                        <p class="mt-2 text-lg font-semibold text-white">画像を追加</p>
+                        <p class="text-xs text-slate-400 mt-1">ドラッグ＆ドロップ または クリック</p>
+                        <p class="text-[10px] text-slate-500 mt-2">JPEG, PNG, WebP, HEIC, GIF</p>
+                    </label>
+                </div>
+
+                <!-- メディアプールリスト -->
+                <section id="media-pool-section" class="flex flex-col flex-grow min-h-[300px]">
+                    <div id="loading-indicator" class="hidden text-center p-3 bg-slate-800 rounded-lg mb-2 text-sm">
+                        <p class="text-slate-300 animate-pulse">処理中...</p>
+                    </div>
+
+                    <div class="bg-slate-800 rounded-lg p-4 flex flex-col h-full shadow-lg border border-slate-700">
+                        <div class="flex justify-between items-center mb-3 flex-shrink-0">
+                            <h2 class="text-lg font-semibold text-white">メディアプール <span id="pool-count" class="text-slate-400 text-sm font-normal ml-2">(0)</span></h2>
+                            <button id="clear-pool-btn" class="bg-red-600/80 hover:bg-red-600 text-white text-xs px-2 py-1 rounded transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                クリア
+                            </button>
+                        </div>
+                        
+                        <ul id="media-list" class="space-y-2 overflow-y-auto flex-grow max-h-[400px] pr-1">
+                            <li id="empty-pool-message" class="text-slate-500 text-center py-12 text-sm border-2 border-dashed border-slate-700 rounded-lg">
+                                画像がありません<br>上から追加してください
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+            </div>
+            
+            <!-- 右カラム: キャンバス設定 & プレビュー -->
+            <div class="lg:w-2/3 flex flex-col gap-6">
+                
+                <!-- 設定パネル -->
+                <div class="bg-slate-800 rounded-lg p-5 shadow-lg border border-slate-700">
+                    <h2 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        キャンバス設定
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                        
+                        <!-- 方向設定 -->
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">並べる方向</label>
+                            <div class="flex space-x-4 bg-slate-900/50 p-1 rounded-lg inline-flex">
+                                <label class="cursor-pointer flex items-center space-x-2 px-3 py-2 rounded hover:bg-slate-700 transition">
+                                    <input type="radio" name="direction" value="vertical" checked class="text-blue-500 focus:ring-blue-500 bg-slate-700 border-none">
+                                    <span class="text-sm text-white">縦 (Vertical)</span>
+                                </label>
+                                <label class="cursor-pointer flex items-center space-x-2 px-3 py-2 rounded hover:bg-slate-700 transition">
+                                    <input type="radio" name="direction" value="horizontal" class="text-blue-500 focus:ring-blue-500 bg-slate-700 border-none">
+                                    <span class="text-sm text-white">横 (Horizontal)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 制限サイズ -->
+                        <div>
+                            <label for="limit-pixels" class="block text-xs font-medium text-slate-400 mb-1">
+                                制限サイズ (px) 
+                                <span class="text-[10px] text-slate-500 ml-1">※この長さを超える手前まで配置</span>
+                            </label>
+                            <input type="number" id="limit-pixels" value="2000" min="100" step="100" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                        </div>
+
+                        <!-- 余白 -->
+                        <div>
+                            <label for="padding-pixels" class="block text-xs font-medium text-slate-400 mb-1">
+                                画像余白 (px)
+                                <span class="text-[10px] text-slate-500 ml-1">※各画像の前後に付与</span>
+                            </label>
+                            <input type="number" id="padding-pixels" value="10" min="0" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                        </div>
+
+                        <!-- 背景色 -->
+                        <div>
+                            <label for="bg-color" class="block text-xs font-medium text-slate-400 mb-1">背景色</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="color" id="bg-color" value="#ffffff" class="h-9 w-16 bg-transparent border-0 rounded cursor-pointer">
+                                <span id="bg-color-code" class="text-sm font-mono text-slate-300">#ffffff</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end gap-3">
+                         <button id="download-btn-top" disabled class="flex items-center gap-2 bg-green-600 hover:bg-green-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white px-4 py-2 rounded font-bold transition shadow">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M12 12.75l-3.32-3.32M12 12.75l3.32-3.32M12 12.75V3" />
+                            </svg>
+                            保存
+                        </button>
+                        <button id="refresh-btn" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-medium transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                            プレビューを更新
+                        </button>
+                    </div>
+                </div>
+
+                <!-- プレビューエリア -->
+                <div class="flex-grow bg-slate-800 rounded-lg p-1 shadow-lg border border-slate-700 flex flex-col relative">
+                    <div class="absolute top-0 left-0 bg-slate-700 px-3 py-1 rounded-br-lg text-xs text-white z-10 border-b border-r border-slate-600">
+                        プレビュー
+                    </div>
+                    
+                    <!-- キャンバス表示コンテナ (スクロール可能) -->
+                    <div class="flex-grow overflow-auto p-4 bg-slate-900/50 rounded min-h-[400px] flex items-center justify-center relative checker-bg" id="canvas-container">
+                        <canvas id="result-canvas" class="max-w-full"></canvas>
+                    </div>
+
+                    <!-- アクションバー -->
+                    <div class="p-4 border-t border-slate-700 bg-slate-800 rounded-b-lg flex justify-between items-center">
+                        <div class="text-xs text-slate-400">
+                            サイズ: <span id="canvas-size-display" class="font-mono text-white">- x -</span>
+                        </div>
+                        <button id="download-btn" disabled class="flex items-center gap-2 bg-green-600 hover:bg-green-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white px-6 py-2 rounded font-bold transition shadow-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M12 12.75l-3.32-3.32M12 12.75l3.32-3.32M12 12.75V3" />
+                            </svg>
+                            画像を保存 (PNG)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('file-input');
+            const mediaList = document.getElementById('media-list');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const clearPoolBtn = document.getElementById('clear-pool-btn');
+            const poolCountDisplay = document.getElementById('pool-count');
+            
+            // Settings Elements
+            const limitPixelsInput = document.getElementById('limit-pixels');
+            const paddingPixelsInput = document.getElementById('padding-pixels');
+            const bgColorInput = document.getElementById('bg-color');
+            const bgColorCode = document.getElementById('bg-color-code');
+            const refreshBtn = document.getElementById('refresh-btn');
+            const directionRadios = document.getElementsByName('direction');
+            
+            // Canvas Elements
+            const canvas = document.getElementById('result-canvas');
+            const ctx = canvas.getContext('2d');
+            const canvasContainer = document.getElementById('canvas-container');
+            const canvasPlaceholder = document.getElementById('canvas-placeholder');
+            const canvasSizeDisplay = document.getElementById('canvas-size-display');
+            const downloadBtn = document.getElementById('download-btn');
+            const downloadBtnTop = document.getElementById('download-btn-top'); // 上部のダウンロードボタン
+
+            // --- State ---
+            const mediaPool = []; // { id, name, type, dataUrl, originalFile, width, height }
+            const supportedTypes = [
+                'image/jpeg', 'image/png', 'image/webp', 'image/bmp', 'image/gif', 'image/heic', 'image/heif'
+            ];
+
+            // --- Event Listeners (UI & Input) ---
+
+            // カラーコード表示更新
+            bgColorInput.addEventListener('input', (e) => {
+                bgColorCode.textContent = e.target.value;
+            });
+
+            // ファイル選択
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+                e.target.value = null;
+            });
+
+            // ドラッグ＆ドロップ
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('drag-over');
+            });
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('drag-over');
+            });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('drag-over');
+                handleFiles(e.dataTransfer.files);
+            });
+
+            // 削除ボタン (Event Delegation)
+            mediaList.addEventListener('click', (e) => {
+                const removeBtn = e.target.closest('.remove-btn');
+                if (removeBtn) {
+                    const li = removeBtn.closest('li');
+                    const id = li.dataset.id;
+                    const index = mediaPool.findIndex(item => item.id === id);
+                    if (index > -1) {
+                        mediaPool.splice(index, 1);
+                    }
+                    li.remove();
+                    updatePoolUI();
+                    if (mediaPool.length > 0) {
+                        requestAnimationFrame(drawCanvas); // 削除時も自動更新
+                    } else {
+                        clearCanvas();
+                    }
+                }
+            });
+
+            // 全削除
+            clearPoolBtn.addEventListener('click', () => {
+                mediaPool.length = 0;
+                updatePoolUI();
+                clearCanvas();
+            });
+
+            // 更新ボタン
+            refreshBtn.addEventListener('click', () => {
+                drawCanvas();
+            });
+
+            // ダウンロードロジックの共通化
+            function handleDownload() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hour = String(now.getHours()).padStart(2, '0');
+                const minute = String(now.getMinutes()).padStart(2, '0');
+                
+                const timestamp = `${year}${month}${day}${hour}${minute}`;
+                
+                const link = document.createElement('a');
+                link.download = `combined-image-${timestamp}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }
+
+            // ダウンロードボタン (下部)
+            downloadBtn.addEventListener('click', handleDownload);
+            
+            // ダウンロードボタン (上部)
+            downloadBtnTop.addEventListener('click', handleDownload);
+
+
+            // --- File Processing ---
+
+            async function handleFiles(files) {
+                const newFiles = Array.from(files).filter(file => {
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    return supportedTypes.includes(file.type) || ['heic', 'heif'].includes(ext);
+                });
+                
+                if (newFiles.length === 0) return;
+
+                const hasHeic = newFiles.some(f => {
+                    const ext = f.name.split('.').pop().toLowerCase();
+                    return f.type === 'image/heic' || f.type === 'image/heif' || ['heic', 'heif'].includes(ext);
+                });
+
+                if (hasHeic) {
+                    if (typeof heic2any === 'undefined') {
+                        alert('HEIC変換ライブラリの読み込みに失敗しました。');
+                        return;
+                    }
+                    loadingIndicator.classList.remove('hidden');
+                }
+
+                const processingPromises = newFiles.map(file => processFile(file));
+                
+                try {
+                    const results = await Promise.all(processingPromises);
+                    results.forEach(item => {
+                        if (item) mediaPool.push(item);
+                    });
+                    
+                    updatePoolUI();
+                    
+                    // 画像が追加されたら自動的に描画更新
+                    if (mediaPool.length > 0) {
+                        drawCanvas();
+                    }
+                } catch (err) {
+                    console.error("Error processing files:", err);
+                } finally {
+                    loadingIndicator.classList.add('hidden');
+                }
+            }
+
+            async function processFile(file) {
+                try {
+                    let blob = file;
+                    let displayType = file.type;
+                    const ext = file.name.split('.').pop().toLowerCase();
+
+                    // HEIC変換
+                    if (file.type === 'image/heic' || file.type === 'image/heif' || ['heic', 'heif'].includes(ext)) {
+                        blob = await heic2any({ blob: file, toType: "image/png", quality: 0.8 });
+                        displayType = 'image/png (HEIC変換済)';
+                    }
+
+                    const dataUrl = await blobToDataURL(blob);
+                    
+                    // 画像サイズを取得するために一度ロードする
+                    const dims = await getImageDimensions(dataUrl);
+
+                    return {
+                        id: crypto.randomUUID(),
+                        name: file.name,
+                        type: displayType,
+                        dataUrl: dataUrl,
+                        width: dims.width,
+                        height: dims.height
+                    };
+
+                } catch (err) {
+                    console.error(`Skipping file ${file.name}:`, err);
+                    return null;
+                }
+            }
+
+            function blobToDataURL(blob) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            }
+
+            function getImageDimensions(url) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve({ width: img.width, height: img.height });
+                    img.onerror = reject;
+                    img.src = url;
+                });
+            }
+
+            // --- UI Updates ---
+
+            function updatePoolUI() {
+                const emptyMessage = document.getElementById('empty-pool-message');
+                poolCountDisplay.textContent = `(${mediaPool.length})`;
+
+                if (mediaPool.length > 0) {
+                    if (emptyMessage) emptyMessage.classList.add('hidden');
+                    clearPoolBtn.disabled = false;
+                } else {
+                    if (emptyMessage) emptyMessage.classList.remove('hidden');
+                    clearPoolBtn.disabled = true;
+                }
+
+                mediaList.innerHTML = '';
+                if (mediaPool.length === 0 && emptyMessage) {
+                    mediaList.appendChild(emptyMessage);
+                }
+
+                mediaPool.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center bg-slate-700 p-2 rounded border border-slate-600';
+                    li.dataset.id = item.id;
+                    li.innerHTML = `
+                        <div class="flex items-center overflow-hidden mr-2">
+                            <img src="${item.dataUrl}" class="w-8 h-8 object-cover rounded mr-2 bg-slate-800" alt="">
+                            <div class="flex flex-col overflow-hidden">
+                                <span class="font-medium text-xs text-white truncate" title="${item.name}">${item.name}</span>
+                                <span class="text-[10px] text-slate-400">${item.width}x${item.height}</span>
+                            </div>
+                        </div>
+                        <button class="remove-btn text-slate-400 hover:text-red-400 p-1">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    `;
+                    mediaList.appendChild(li);
+                });
+            }
+
+            // --- Canvas Drawing Logic ---
+
+            async function drawCanvas() {
+                if (mediaPool.length === 0) {
+                    clearCanvas();
+                    return;
+                }
+
+                // 設定値の取得
+                const direction = Array.from(directionRadios).find(r => r.checked).value; // 'vertical' or 'horizontal'
+                const limitPixels = parseInt(limitPixelsInput.value, 10) || 2000;
+                const padding = parseInt(paddingPixelsInput.value, 10) || 0;
+                const backgroundColor = bgColorInput.value;
+
+                // 配置計算
+                let accumulatedSize = 0;
+                let poolIndex = 0;
+                const layoutItems = []; // { imgObj, x, y, width, height }
+                
+                // 画像ロード用キャッシュ (すでにロード済みのImageオブジェクトがあれば使う、なければ作る)
+                // 今回はシンプルに毎回new Imageするが、メモリ効率のためdataUrlを使う
+                
+                // 配置シミュレーション
+                // 最大1000枚のループ制限 (無限ループ防止)
+                for (let i = 0; i < 1000; i++) {
+                    const mediaItem = mediaPool[poolIndex];
+                    
+                    // アイテムが占有するサイズ（画像本体 + 余白）
+                    // 縦並べなら: 高さ + 上余白 + 下余白
+                    // 横並べなら: 幅 + 左余白 + 右余白
+                    // ※ ここでは「各画像の前後」にpaddingを入れる実装とする
+                    const itemSize = (direction === 'vertical' ? mediaItem.height : mediaItem.width) + (padding * 2);
+
+                    // 制限チェック: 追加すると制限を超える場合はループ終了
+                    // ただし、1枚目ですでに超えている場合は最低1枚は描画するか？
+                    // 要件「指定したピクセル数を超える1つ手前まで」に従う。
+                    // 0枚目の時点で超えていたら何も描画されないことになるが、
+                    // ツールとして不便なので、「accumulatedSizeが0（まだ何も配置していない）なら、制限を超えていても配置する」という例外を入れるのが親切。
+                    // ここでは厳密に実装しつつ、1枚目は許容するロジックにする。
+                    if (accumulatedSize > 0 && accumulatedSize + itemSize > limitPixels) {
+                        break;
+                    }
+
+                    layoutItems.push({
+                        ...mediaItem,
+                        layoutSize: itemSize
+                    });
+
+                    accumulatedSize += itemSize;
+
+                    // プールのインデックスを進める（ループ）
+                    poolIndex = (poolIndex + 1) % mediaPool.length;
+                    
+                    // 制限サイズに達したら終了
+                    if (accumulatedSize >= limitPixels) break;
+                }
+
+                if (layoutItems.length === 0) {
+                    clearCanvas();
+                    canvasPlaceholder.textContent = "制限サイズが小さすぎて画像が入リません";
+                    canvasPlaceholder.classList.remove('hidden');
+                    return;
+                }
+
+                // キャンバス全体のサイズ決定
+                let canvasWidth, canvasHeight;
+
+                if (direction === 'vertical') {
+                    // 縦並べ: 高さは累積サイズ、幅は最大画像幅
+                    // 幅方向にも余白を入れるかどうかは要件にないが、中央揃えなどがなければ画像の幅そのまま
+                    const maxW = Math.max(...layoutItems.map(item => item.width));
+                    canvasWidth = maxW;
+                    canvasHeight = accumulatedSize;
+                } else {
+                    // 横並べ: 幅は累積サイズ、高さは最大画像高さ
+                    const maxH = Math.max(...layoutItems.map(item => item.height));
+                    canvasWidth = accumulatedSize;
+                    canvasHeight = maxH;
+                }
+
+                // キャンバスリサイズ
+                canvas.width = canvasWidth;
+                canvas.height = canvasHeight;
+
+                // 描画処理
+                ctx.fillStyle = backgroundColor;
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+                // 画像描画
+                // 非同期ロードが必要
+                let currentPos = 0;
+                
+                const drawPromises = layoutItems.map(async (item) => {
+                    const img = new Image();
+                    img.src = item.dataUrl;
+                    await new Promise(r => img.onload = r);
+
+                    // 描画位置計算
+                    // paddingは「前後」につくので、描画開始位置は currentPos + padding
+                    let drawX, drawY;
+
+                    if (direction === 'vertical') {
+                        // 横方向は中央寄せにするか？とりあえず左詰め(0)にする。
+                        // 見栄え良くするため中央寄せ( (canvasWidth - img.width) / 2 ) にしてみる
+                        drawX = (canvasWidth - item.width) / 2;
+                        drawY = currentPos + padding;
+                        
+                        // 位置更新
+                        currentPos += item.height + (padding * 2);
+                    } else {
+                        // 横並べ
+                        drawX = currentPos + padding;
+                        // 縦方向中央寄せ
+                        drawY = (canvasHeight - item.height) / 2;
+
+                        // 位置更新
+                        currentPos += item.width + (padding * 2);
+                    }
+
+                    ctx.drawImage(img, drawX, drawY);
+                });
+
+                // シーケンシャルに描画位置を計算したので、Promise.allで一気に描画しても重なり順の問題はない（重ならないので）
+                // ただし、currentPosの計算はループ内で行う必要がある。
+                // 上記のmap内ではcurrentPosが正しく更新されない（並列実行されるため）
+                // 修正：for ofループで順次処理する
+
+                currentPos = 0;
+                for (const item of layoutItems) {
+                    const img = new Image();
+                    img.src = item.dataUrl;
+                    await new Promise(r => img.onload = r);
+
+                    if (direction === 'vertical') {
+                        const drawX = (canvasWidth - item.width) / 2;
+                        const drawY = currentPos + padding;
+                        ctx.drawImage(img, drawX, drawY);
+                        currentPos += item.height + (padding * 2);
+                    } else {
+                        const drawX = currentPos + padding;
+                        const drawY = (canvasHeight - item.height) / 2;
+                        ctx.drawImage(img, drawX, drawY);
+                        currentPos += item.width + (padding * 2);
+                    }
+                }
+
+                // 完了処理
+                canvasPlaceholder.classList.add('hidden');
+                canvas.classList.remove('hidden');
+                canvasSizeDisplay.textContent = `${canvasWidth} x ${canvasHeight} px`;
+                downloadBtn.disabled = false;
+                downloadBtnTop.disabled = false; // 上部ボタンも有効化
+            }
+
+            function clearCanvas() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                canvas.classList.add('hidden');
+                canvasPlaceholder.textContent = "画像を追加して「更新」を押してください";
+                canvasPlaceholder.classList.remove('hidden');
+                downloadBtn.disabled = true;
+                downloadBtnTop.disabled = true; // 上部ボタンも無効化
+                canvasSizeDisplay.textContent = "- x -";
+            }
+
+            // CSS追加: チェッカーボード背景（透過確認用）
+            const style = document.createElement('style');
+            style.innerHTML = `
+                .checker-bg {
+                    background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%), 
+                                      linear-gradient(-45deg, #1e293b 25%, transparent 25%), 
+                                      linear-gradient(45deg, transparent 75%, #1e293b 75%), 
+                                      linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+                    background-size: 20px 20px;
+                    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>
