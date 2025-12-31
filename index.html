@@ -31,6 +31,9 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #64748b; 
         }
+        .github-icon-link {position: fixed; top: 4px; left: 4px; z-index: 999;}
+        .github-icon-link img {width: 32px; height: 32px;}
+        .github-icon-link:hover img {transform: scale(1.1);}
     </style>
 </head>
 <body class="bg-slate-900 text-gray-300 min-h-screen p-4 sm:p-8">
@@ -180,6 +183,10 @@
         
         </div>
     </div>
+
+    <a href="https://github.com/black-sesame-ice-cream/minimal-svg-editor" target="_blank" rel="noopener noreferrer" class="github-icon-link" title="View on GitHub">
+        <img src="./images/github-icon.svg" alt="GitHub" />
+    </a>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
