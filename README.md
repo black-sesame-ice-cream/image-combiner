@@ -10,12 +10,12 @@ This tool is designed for use on a PC with the Google Chrome browser. Operation 
 ## Demo
 You can try this tool on the page below.
 
-https://black-sesame-ice-cream.github.io/[Repository name]/
+https://black-sesame-ice-cream.github.io/image-combiner/
 
 ## デモ
 以下のページでこのツールを試すことができます。
 
-https://black-sesame-ice-cream.github.io/[Repository name]/
+https://black-sesame-ice-cream.github.io/image-combiner/
 
 ## Overview
 Image Combiner is a web tool that allows you to upload multiple images and automatically combine them into a single, continuous image file. 
@@ -87,4 +87,4 @@ Please see below for details.
 - HTML5
 - Tailwind CSS (via CDN)
 - JavaScript (Vanilla)
-- [heic2any](https://github.com/alexcorvi/heic2any) (Library for HEIC conversion)
+- [heic2any]
