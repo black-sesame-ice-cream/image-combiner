@@ -91,6 +91,9 @@
                 <!-- 設定パネル -->
                 <div class="bg-slate-800 rounded-lg p-5 shadow-lg border border-slate-700">
                     <h2 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+                        </svg>
                         キャンバス設定
                     </h2>
                     
@@ -164,6 +167,9 @@
                     <!-- キャンバス表示コンテナ (スクロール可能) -->
                     <div class="flex-grow overflow-auto p-4 bg-slate-900/50 rounded min-h-[400px] flex items-center justify-center relative checker-bg" id="canvas-container">
                         <canvas id="result-canvas" class="max-w-full"></canvas>
+                        <div id="canvas-placeholder" class="text-slate-500 text-sm">
+                            画像を追加して「更新」を押してください
+                        </div>
                     </div>
 
                     <!-- アクションバー -->
@@ -286,19 +292,24 @@
 
             // ダウンロードロジックの共通化
             function handleDownload() {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const day = String(now.getDate()).padStart(2, '0');
-                const hour = String(now.getHours()).padStart(2, '0');
-                const minute = String(now.getMinutes()).padStart(2, '0');
-                
-                const timestamp = `${year}${month}${day}${hour}${minute}`;
-                
-                const link = document.createElement('a');
-                link.download = `combined-image-${timestamp}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
+                try {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const hour = String(now.getHours()).padStart(2, '0');
+                    const minute = String(now.getMinutes()).padStart(2, '0');
+                    
+                    const timestamp = `${year}${month}${day}${hour}${minute}`;
+                    
+                    const link = document.createElement('a');
+                    link.download = `combined-image-${timestamp}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                } catch (e) {
+                    console.error("Download error:", e);
+                    alert("画像の保存に失敗しました。画像サイズが大きすぎる可能性があります。");
+                }
             }
 
             // ダウンロードボタン (下部)
@@ -450,151 +461,106 @@
                     clearCanvas();
                     return;
                 }
-
-                // 設定値の取得
-                const direction = Array.from(directionRadios).find(r => r.checked).value; // 'vertical' or 'horizontal'
-                const limitPixels = parseInt(limitPixelsInput.value, 10) || 2000;
-                const padding = parseInt(paddingPixelsInput.value, 10) || 0;
-                const backgroundColor = bgColorInput.value;
-
-                // 配置計算
-                let accumulatedSize = 0;
-                let poolIndex = 0;
-                const layoutItems = []; // { imgObj, x, y, width, height }
                 
-                // 画像ロード用キャッシュ (すでにロード済みのImageオブジェクトがあれば使う、なければ作る)
-                // 今回はシンプルに毎回new Imageするが、メモリ効率のためdataUrlを使う
-                
-                // 配置シミュレーション
-                // 最大1000枚のループ制限 (無限ループ防止)
-                for (let i = 0; i < 1000; i++) {
-                    const mediaItem = mediaPool[poolIndex];
+                try {
+                    // 設定値の取得
+                    const direction = Array.from(directionRadios).find(r => r.checked).value; // 'vertical' or 'horizontal'
+                    const limitPixels = parseInt(limitPixelsInput.value, 10) || 2000;
+                    const padding = parseInt(paddingPixelsInput.value, 10) || 0;
+                    const backgroundColor = bgColorInput.value;
+
+                    // 配置計算
+                    let accumulatedSize = 0;
+                    let poolIndex = 0;
+                    const layoutItems = []; // { imgObj, x, y, width, height }
                     
-                    // アイテムが占有するサイズ（画像本体 + 余白）
-                    // 縦並べなら: 高さ + 上余白 + 下余白
-                    // 横並べなら: 幅 + 左余白 + 右余白
-                    // ※ ここでは「各画像の前後」にpaddingを入れる実装とする
-                    const itemSize = (direction === 'vertical' ? mediaItem.height : mediaItem.width) + (padding * 2);
+                    // 配置シミュレーション
+                    for (let i = 0; i < 1000; i++) {
+                        const mediaItem = mediaPool[poolIndex];
+                        const itemSize = (direction === 'vertical' ? mediaItem.height : mediaItem.width) + (padding * 2);
 
-                    // 制限チェック: 追加すると制限を超える場合はループ終了
-                    // ただし、1枚目ですでに超えている場合は最低1枚は描画するか？
-                    // 要件「指定したピクセル数を超える1つ手前まで」に従う。
-                    // 0枚目の時点で超えていたら何も描画されないことになるが、
-                    // ツールとして不便なので、「accumulatedSizeが0（まだ何も配置していない）なら、制限を超えていても配置する」という例外を入れるのが親切。
-                    // ここでは厳密に実装しつつ、1枚目は許容するロジックにする。
-                    if (accumulatedSize > 0 && accumulatedSize + itemSize > limitPixels) {
-                        break;
+                        if (accumulatedSize > 0 && accumulatedSize + itemSize > limitPixels) {
+                            break;
+                        }
+
+                        layoutItems.push({
+                            ...mediaItem,
+                            layoutSize: itemSize
+                        });
+
+                        accumulatedSize += itemSize;
+                        poolIndex = (poolIndex + 1) % mediaPool.length;
+                        if (accumulatedSize >= limitPixels) break;
                     }
 
-                    layoutItems.push({
-                        ...mediaItem,
-                        layoutSize: itemSize
-                    });
+                    if (layoutItems.length === 0) {
+                        clearCanvas();
+                        canvasPlaceholder.textContent = "制限サイズが小さすぎて画像が入リません";
+                        canvasPlaceholder.classList.remove('hidden');
+                        return;
+                    }
 
-                    accumulatedSize += itemSize;
-
-                    // プールのインデックスを進める（ループ）
-                    poolIndex = (poolIndex + 1) % mediaPool.length;
-                    
-                    // 制限サイズに達したら終了
-                    if (accumulatedSize >= limitPixels) break;
-                }
-
-                if (layoutItems.length === 0) {
-                    clearCanvas();
-                    canvasPlaceholder.textContent = "制限サイズが小さすぎて画像が入リません";
-                    canvasPlaceholder.classList.remove('hidden');
-                    return;
-                }
-
-                // キャンバス全体のサイズ決定
-                let canvasWidth, canvasHeight;
-
-                if (direction === 'vertical') {
-                    // 縦並べ: 高さは累積サイズ、幅は最大画像幅
-                    // 幅方向にも余白を入れるかどうかは要件にないが、中央揃えなどがなければ画像の幅そのまま
-                    const maxW = Math.max(...layoutItems.map(item => item.width));
-                    canvasWidth = maxW;
-                    canvasHeight = accumulatedSize;
-                } else {
-                    // 横並べ: 幅は累積サイズ、高さは最大画像高さ
-                    const maxH = Math.max(...layoutItems.map(item => item.height));
-                    canvasWidth = accumulatedSize;
-                    canvasHeight = maxH;
-                }
-
-                // キャンバスリサイズ
-                canvas.width = canvasWidth;
-                canvas.height = canvasHeight;
-
-                // 描画処理
-                ctx.fillStyle = backgroundColor;
-                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-                // 画像描画
-                // 非同期ロードが必要
-                let currentPos = 0;
-                
-                const drawPromises = layoutItems.map(async (item) => {
-                    const img = new Image();
-                    img.src = item.dataUrl;
-                    await new Promise(r => img.onload = r);
-
-                    // 描画位置計算
-                    // paddingは「前後」につくので、描画開始位置は currentPos + padding
-                    let drawX, drawY;
+                    // キャンバス全体のサイズ決定
+                    let canvasWidth, canvasHeight;
 
                     if (direction === 'vertical') {
-                        // 横方向は中央寄せにするか？とりあえず左詰め(0)にする。
-                        // 見栄え良くするため中央寄せ( (canvasWidth - img.width) / 2 ) にしてみる
-                        drawX = (canvasWidth - item.width) / 2;
-                        drawY = currentPos + padding;
-                        
-                        // 位置更新
-                        currentPos += item.height + (padding * 2);
+                        const maxW = Math.max(...layoutItems.map(item => item.width));
+                        canvasWidth = maxW;
+                        canvasHeight = accumulatedSize;
                     } else {
-                        // 横並べ
-                        drawX = currentPos + padding;
-                        // 縦方向中央寄せ
-                        drawY = (canvasHeight - item.height) / 2;
-
-                        // 位置更新
-                        currentPos += item.width + (padding * 2);
+                        const maxH = Math.max(...layoutItems.map(item => item.height));
+                        canvasWidth = accumulatedSize;
+                        canvasHeight = maxH;
                     }
 
-                    ctx.drawImage(img, drawX, drawY);
-                });
+                    // キャンバスリサイズ
+                    canvas.width = canvasWidth;
+                    canvas.height = canvasHeight;
 
-                // シーケンシャルに描画位置を計算したので、Promise.allで一気に描画しても重なり順の問題はない（重ならないので）
-                // ただし、currentPosの計算はループ内で行う必要がある。
-                // 上記のmap内ではcurrentPosが正しく更新されない（並列実行されるため）
-                // 修正：for ofループで順次処理する
+                    // 描画処理 (背景)
+                    ctx.fillStyle = backgroundColor;
+                    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-                currentPos = 0;
-                for (const item of layoutItems) {
-                    const img = new Image();
-                    img.src = item.dataUrl;
-                    await new Promise(r => img.onload = r);
+                    // 画像描画
+                    let currentPos = 0;
+                    
+                    for (const item of layoutItems) {
+                        const img = new Image();
+                        // 画像ロード待機とエラーハンドリング
+                        await new Promise((resolve, reject) => {
+                            img.onload = resolve;
+                            img.onerror = reject;
+                            img.src = item.dataUrl;
+                        }).catch(e => console.error("Image load error", e));
 
-                    if (direction === 'vertical') {
-                        const drawX = (canvasWidth - item.width) / 2;
-                        const drawY = currentPos + padding;
-                        ctx.drawImage(img, drawX, drawY);
-                        currentPos += item.height + (padding * 2);
-                    } else {
-                        const drawX = currentPos + padding;
-                        const drawY = (canvasHeight - item.height) / 2;
-                        ctx.drawImage(img, drawX, drawY);
-                        currentPos += item.width + (padding * 2);
+                        if (img.complete && img.naturalWidth !== 0) {
+                            if (direction === 'vertical') {
+                                const drawX = (canvasWidth - item.width) / 2;
+                                const drawY = currentPos + padding;
+                                ctx.drawImage(img, drawX, drawY);
+                                currentPos += item.height + (padding * 2);
+                            } else {
+                                const drawX = currentPos + padding;
+                                const drawY = (canvasHeight - item.height) / 2;
+                                ctx.drawImage(img, drawX, drawY);
+                                currentPos += item.width + (padding * 2);
+                            }
+                        }
                     }
+
+                    // 完了処理
+                    canvasPlaceholder.classList.add('hidden');
+                    canvas.classList.remove('hidden');
+                    
+                    // サイズ表示更新
+                    canvasSizeDisplay.textContent = `${canvasWidth} x ${canvasHeight} px`;
+                    
+                    downloadBtn.disabled = false;
+                    downloadBtnTop.disabled = false;
+
+                } catch (error) {
+                    console.error("Draw Error:", error);
                 }
-
-                // 完了処理
-                canvasPlaceholder.classList.add('hidden');
-                canvas.classList.remove('hidden');
-                canvasSizeDisplay.textContent = `${canvasWidth} x ${canvasHeight} px`;
-                downloadBtn.disabled = false;
-                downloadBtnTop.disabled = false; // 上部ボタンも有効化
             }
 
             function clearCanvas() {
@@ -603,7 +569,7 @@
                 canvasPlaceholder.textContent = "画像を追加して「更新」を押してください";
                 canvasPlaceholder.classList.remove('hidden');
                 downloadBtn.disabled = true;
-                downloadBtnTop.disabled = true; // 上部ボタンも無効化
+                downloadBtnTop.disabled = true;
                 canvasSizeDisplay.textContent = "- x -";
             }
 
