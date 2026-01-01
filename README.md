@@ -1,5 +1,5 @@
-# [Image Combiner]
-![image1](images/image-1.png)
+# Image Combiner
+![image1](images/image-1.jpeg)
 
 ## Recommended Environment
 This tool is designed for use on a PC with the Google Chrome browser. Operation on other devices or browsers is not guaranteed.
