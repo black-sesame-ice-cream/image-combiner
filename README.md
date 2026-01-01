@@ -1,4 +1,4 @@
-# Image Combiner
+# image-combiner
 ![image1](images/image-1.jpeg)
 
 ## Recommended Environment
@@ -18,56 +18,48 @@ https://black-sesame-ice-cream.github.io/image-combiner/
 https://black-sesame-ice-cream.github.io/image-combiner/
 
 ## Overview
-Image Combiner is a web tool that allows you to upload multiple images and automatically combine them into a single, continuous image file. 
+**Image Combiner** is a client-side web tool that allows you to easily combine multiple images into a single image file (tiling/mosaic).
 
-The unique feature of this tool is that it **loops the uploaded images** until they fill a specified pixel length. This makes it ideal for creating long image strips, repeating patterns, or simply merging materials with customizable spacing.
-
-**Key Features:**
-- **Flexible Arrangement:** Stack images vertically or horizontally.
-- **Looping Function:** Automatically repeats images to fill the target size (limit pixels).
-- **HEIC Support:** Converts HEIC files (iPhone photos) to PNG directly in the browser.
-- **Customization:** Adjustable padding and background colors.
-- **Privacy:** All processing is done locally within your browser; images are not uploaded to any server.
+* **Privacy First**: All processing is done within your browser using JavaScript. Your images are never uploaded to a server.
+* **HEIC Support**: Supports HEIC/HEIF formats (standard on iPhones) in addition to JPEG, PNG, WebP, and GIF.
+* **Flexible Layout**:
+    * Choose between Horizontal (Z-pattern) or Vertical (N-pattern) tiling.
+    * Auto-fill logic repeats images to fill the canvas.
+* **Customization**: Adjust canvas size, resize input images while maintaining aspect ratio, set padding (gaps), and change background colors.
 
 ## 概要
-Image Combinerは、複数の画像をアップロードして、自動的に繋ぎ合わせて1枚の画像として保存できるWebツールです。
+**Image Combiner** は、複数の画像を簡単に1枚の画像（タイル状）に結合できる、クライアントサイド完結型のWebツールです。
 
-このツールの特徴は、**指定した長さを埋めるまで画像を自動でループ配置する**点です。これにより、単なる画像の連結だけでなく、長い画像ストリップや繰り返しパターンの作成が容易に行えます。
-
-**主な特徴:**
-- **自由な配置:** 縦方向（Vertical）または横方向（Horizontal）への結合が可能。
-- **ループ機能:** 指定した制限サイズ（px）に達するまで、アップロードした画像リストを繰り返し配置します。
-- **HEIC対応:** iPhoneなどで撮影されたHEIC形式の画像を、ブラウザ上で自動的にPNGに変換して読み込みます。
-- **カスタマイズ:** 画像間の余白（パディング）や背景色を自由に設定可能。
-- **プライバシー:** すべての処理はブラウザ内で完結し、サーバーへのアップロードは行われません。
+* **プライバシー保護**: すべての処理はJavaScriptを用いてブラウザ上で行われます。画像データがサーバーに送信されることはありません。
+* **HEIC対応**: JPEG, PNG, WebP, GIFに加え、iPhoneなどで標準的なHEIC/HEIF形式の読み込みに対応しています。
+* **柔軟なレイアウト**:
+    * 横方向（Z型）または縦方向（N型）の並べ方を選択できます。
+    * キャンバスが埋まるまで、登録した画像を自動でループして配置します。
+* **カスタマイズ**: キャンバスサイズの指定、画像のサイズ統一（アスペクト比維持）、余白（padding）の設定、背景色の変更が可能です。
 
 ## Usage
-1.  **Add Images**
-    Drag and drop your image files into the "Add Images" area, or click to select files. Supported formats include JPEG, PNG, WebP, GIF, and HEIC.
-2.  **Adjust Settings**
-    Configure the canvas settings on the right panel:
-    - **Direction:** Choose to stack images Vertically or Horizontally.
-    - **Limit Size (px):** Set the maximum length. Images will be repeated to fill this length.
-    - **Padding (px):** Set the spacing between images.
-    - **Background Color:** Choose a background color for the canvas.
-3.  **Preview & Edit**
-    The preview updates automatically. You can remove individual images from the "Media Pool" list on the left.
-4.  **Save**
-    Click the "Save Image (PNG)" button to download the combined result.
+1.  **Add Images**: Drag and drop your image files into the "Add Images" area, or click to select files.
+    * Supported formats: JPEG, PNG, WebP, BMP, HEIC/HEIF, GIF.
+2.  **Manage Pool**: You can check the added images in the "Media Pool" list on the left. Remove unwanted images using the "x" button.
+3.  **Configure Settings**: Adjust the canvas settings in the right panel.
+    * **Canvas Size**: Set the output width and height (px).
+    * **Direction**: Choose how images flow (Horizontal/Vertical).
+    * **Resize**: Enable to unify image sizes based on width or height.
+    * **Padding/Background**: Set the gap between images and the background color.
+4.  **Preview**: Click the "Update Preview" button to render the combined image.
+5.  **Download**: Click "Save Image (PNG)" to download the result.
 
 ## 使い方
-1.  **画像を追加**
-    「画像を追加」エリアにファイルをドラッグ＆ドロップするか、クリックして選択してください。JPEG, PNG, WebP, GIFに加え、HEIC形式にも対応しています。
-2.  **設定を調整**
-    右側のパネルでキャンバスの設定を行います：
-    - **並べる方向:** 縦（Vertical）か横（Horizontal）かを選択します。
-    - **制限サイズ (px):** 作成する画像の最大長を指定します。この長さを埋めるように画像が繰り返されます。
-    - **画像余白 (px):** 画像間のスペースを指定します。
-    - **背景色:** 背景の色を設定します。
-3.  **プレビューと編集**
-    プレビューは自動的に更新されます。左側の「メディアプール」リストから個別に画像を削除することも可能です。
-4.  **保存**
-    「画像を保存 (PNG)」ボタンをクリックして、結合された画像をダウンロードします。
+1.  **画像を追加**: 「画像を追加」エリアにファイルをドラッグ＆ドロップするか、クリックしてファイルを選択します。
+    * 対応形式: JPEG, PNG, WebP, BMP, HEIC/HEIF, GIF
+2.  **プール管理**: 追加された画像は左側の「メディアプール」リストで確認できます。不要な画像は「x」ボタンで削除可能です。
+3.  **設定の変更**: 右側のパネルでキャンバスの設定を行います。
+    * **キャンバスサイズ**: 出力する画像の幅と高さを指定します。
+    * **並べ方**: 画像の並ぶ方向（横方向/縦方向）を選択します。
+    * **サイズを揃える**: 有効にすると、横幅または縦幅を基準に画像のサイズを統一します。
+    * **余白・背景色**: 画像間の隙間や背景色を指定します。
+4.  **プレビュー**: 「プレビューを更新」ボタンを押すと、設定に基づいて画像が描画されます。
+5.  **保存**: 「画像を保存 (PNG)」ボタンを押して、完成した画像をダウンロードします。
 
 ## Licenses
 Please see below for details.
@@ -84,7 +76,7 @@ Please see below for details.
 [第三者ライセンス](THIRD-PARTY-LICENSES.txt/)
 
 ## Tech Stack
-- HTML5
-- Tailwind CSS (via CDN)
-- JavaScript (Vanilla)
-- [heic2any]
+* **HTML5 / CSS3**
+* **JavaScript (Vanilla)**
+* **Tailwind CSS**
+* **heic2any**
