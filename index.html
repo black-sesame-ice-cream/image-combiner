@@ -41,7 +41,6 @@
     <div class="max-w-screen-2xl mx-auto">
         <header class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-white mb-2">Image Combiner</h1>
-            <p class="text-slate-400 text-sm">画像をアップロードして、好きな長さまで繋げて保存</p>
         </header>
 
         <div class="flex flex-col lg:flex-row gap-6">
@@ -91,53 +90,98 @@
                 <!-- 設定パネル -->
                 <div class="bg-slate-800 rounded-lg p-5 shadow-lg border border-slate-700">
                     <h2 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
-                        </svg>
                         キャンバス設定
                     </h2>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         
-                        <!-- 方向設定 -->
-                        <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1">並べる方向</label>
-                            <div class="flex space-x-4 bg-slate-900/50 p-1 rounded-lg inline-flex">
-                                <label class="cursor-pointer flex items-center space-x-2 px-3 py-2 rounded hover:bg-slate-700 transition">
-                                    <input type="radio" name="direction" value="vertical" checked class="text-blue-500 focus:ring-blue-500 bg-slate-700 border-none">
-                                    <span class="text-sm text-white">縦 (Vertical)</span>
-                                </label>
-                                <label class="cursor-pointer flex items-center space-x-2 px-3 py-2 rounded hover:bg-slate-700 transition">
-                                    <input type="radio" name="direction" value="horizontal" class="text-blue-500 focus:ring-blue-500 bg-slate-700 border-none">
-                                    <span class="text-sm text-white">横 (Horizontal)</span>
-                                </label>
+                        <!-- 左側設定群 -->
+                        <div class="space-y-4">
+                            <!-- キャンバスサイズ -->
+                            <div class="flex gap-4">
+                                <div class="flex-1">
+                                    <label for="canvas-width" class="block text-xs font-medium text-slate-400 mb-1">
+                                        キャンバス幅 (px)
+                                    </label>
+                                    <input type="number" id="canvas-width" value="1920" min="100" step="10" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                </div>
+                                <div class="flex-1">
+                                    <label for="canvas-height" class="block text-xs font-medium text-slate-400 mb-1">
+                                        キャンバス高さ (px)
+                                    </label>
+                                    <input type="number" id="canvas-height" value="1080" min="100" step="10" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                </div>
+                            </div>
+
+                            <!-- 並べ方設定 -->
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">画像の並べ方</label>
+                                <div class="flex flex-col space-y-2 bg-slate-900/50 p-2 rounded-lg">
+                                    <label class="cursor-pointer flex items-center space-x-2 rounded hover:bg-slate-700 transition p-1">
+                                        <input type="radio" name="direction" value="horizontal" checked class="text-blue-500 focus:ring-blue-500 bg-slate-700 border-none">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm text-white">横方向に並べる (Z型)</span>
+                                            <span class="text-[10px] text-slate-500">右端で改行、下へ続く</span>
+                                        </div>
+                                    </label>
+                                    <label class="cursor-pointer flex items-center space-x-2 rounded hover:bg-slate-700 transition p-1">
+                                        <input type="radio" name="direction" value="vertical" class="text-blue-500 focus:ring-blue-500 bg-slate-700 border-none">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm text-white">縦方向に並べる (N型)</span>
+                                            <span class="text-[10px] text-slate-500">下端で改列、右へ続く</span>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- 制限サイズ -->
-                        <div>
-                            <label for="limit-pixels" class="block text-xs font-medium text-slate-400 mb-1">
-                                制限サイズ (px) 
-                                <span class="text-[10px] text-slate-500 ml-1">※この長さを超える手前まで配置</span>
-                            </label>
-                            <input type="number" id="limit-pixels" value="2000" min="100" step="100" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500">
-                        </div>
+                        <!-- 右側設定群 -->
+                        <div class="space-y-4">
+                             <!-- リサイズ設定 -->
+                             <div class="border border-slate-600 rounded-lg p-3 bg-slate-900/30">
+                                <label class="flex items-center space-x-2 cursor-pointer mb-3">
+                                    <input type="checkbox" id="resize-enable" class="text-blue-500 rounded bg-slate-700 border-slate-500 focus:ring-blue-500 h-4 w-4">
+                                    <span class="text-sm font-medium text-white">画像の大きさを揃える</span>
+                                </label>
 
-                        <!-- 余白 -->
-                        <div>
-                            <label for="padding-pixels" class="block text-xs font-medium text-slate-400 mb-1">
-                                画像余白 (px)
-                                <span class="text-[10px] text-slate-500 ml-1">※各画像の前後に付与</span>
-                            </label>
-                            <input type="number" id="padding-pixels" value="10" min="0" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500">
-                        </div>
+                                <div id="resize-options" class="transition-opacity duration-200 opacity-50 pointer-events-none space-y-3 pl-1">
+                                    <div class="flex items-center gap-4">
+                                        <label class="flex items-center space-x-2 cursor-pointer">
+                                            <input type="radio" name="resize-target" value="width" checked class="text-blue-500 bg-slate-700 border-none focus:ring-blue-500">
+                                            <span class="text-xs text-slate-300">横幅を基準</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 cursor-pointer">
+                                            <input type="radio" name="resize-target" value="height" class="text-blue-500 bg-slate-700 border-none focus:ring-blue-500">
+                                            <span class="text-xs text-slate-300">縦幅を基準</span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="resize-value" class="block text-[10px] font-medium text-slate-400 mb-1">
+                                            サイズ指定 (px) <span class="text-slate-500">- アスペクト比維持</span>
+                                        </label>
+                                        <input type="number" id="resize-value" value="500" min="10" step="10" class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500">
+                                    </div>
+                                </div>
+                            </div>
 
-                        <!-- 背景色 -->
-                        <div>
-                            <label for="bg-color" class="block text-xs font-medium text-slate-400 mb-1">背景色</label>
-                            <div class="flex items-center space-x-2">
-                                <input type="color" id="bg-color" value="#ffffff" class="h-9 w-16 bg-transparent border-0 rounded cursor-pointer">
-                                <span id="bg-color-code" class="text-sm font-mono text-slate-300">#ffffff</span>
+                            <div class="flex gap-4">
+                                <!-- 余白 -->
+                                <div class="flex-1">
+                                    <label for="padding-pixels" class="block text-xs font-medium text-slate-400 mb-1">
+                                        余白 (px)
+                                    </label>
+                                    <input type="number" id="padding-pixels" value="20" min="0" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                                </div>
+
+                                <!-- 背景色 -->
+                                <div class="flex-1">
+                                    <label for="bg-color" class="block text-xs font-medium text-slate-400 mb-1">背景色</label>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="color" id="bg-color" value="#ffffff" class="h-9 w-full bg-transparent border-0 rounded cursor-pointer min-w-[50px]">
+                                    </div>
+                                    <span id="bg-color-code" class="block text-[10px] font-mono text-slate-500 mt-1">#ffffff</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -147,7 +191,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M12 12.75l-3.32-3.32M12 12.75l3.32-3.32M12 12.75V3" />
                             </svg>
-                            保存
+                            画像を保存 (PNG)
                         </button>
                         <button id="refresh-btn" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-medium transition">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
@@ -205,12 +249,19 @@
             const poolCountDisplay = document.getElementById('pool-count');
             
             // Settings Elements
-            const limitPixelsInput = document.getElementById('limit-pixels');
+            const canvasWidthInput = document.getElementById('canvas-width');
+            const canvasHeightInput = document.getElementById('canvas-height');
             const paddingPixelsInput = document.getElementById('padding-pixels');
             const bgColorInput = document.getElementById('bg-color');
             const bgColorCode = document.getElementById('bg-color-code');
             const refreshBtn = document.getElementById('refresh-btn');
             const directionRadios = document.getElementsByName('direction');
+
+            // Resize Settings Elements
+            const resizeEnableCheckbox = document.getElementById('resize-enable');
+            const resizeOptionsDiv = document.getElementById('resize-options');
+            const resizeTargetRadios = document.getElementsByName('resize-target');
+            const resizeValueInput = document.getElementById('resize-value');
             
             // Canvas Elements
             const canvas = document.getElementById('result-canvas');
@@ -219,7 +270,7 @@
             const canvasPlaceholder = document.getElementById('canvas-placeholder');
             const canvasSizeDisplay = document.getElementById('canvas-size-display');
             const downloadBtn = document.getElementById('download-btn');
-            const downloadBtnTop = document.getElementById('download-btn-top'); // 上部のダウンロードボタン
+            const downloadBtnTop = document.getElementById('download-btn-top');
 
             // --- State ---
             const mediaPool = []; // { id, name, type, dataUrl, originalFile, width, height }
@@ -232,6 +283,15 @@
             // カラーコード表示更新
             bgColorInput.addEventListener('input', (e) => {
                 bgColorCode.textContent = e.target.value;
+            });
+
+            // リサイズオプションの表示/非表示制御
+            resizeEnableCheckbox.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    resizeOptionsDiv.classList.remove('opacity-50', 'pointer-events-none');
+                } else {
+                    resizeOptionsDiv.classList.add('opacity-50', 'pointer-events-none');
+                }
             });
 
             // ファイル選択
@@ -312,10 +372,8 @@
                 }
             }
 
-            // ダウンロードボタン (下部)
+            // ダウンロードボタン
             downloadBtn.addEventListener('click', handleDownload);
-            
-            // ダウンロードボタン (上部)
             downloadBtnTop.addEventListener('click', handleDownload);
 
 
@@ -465,68 +523,159 @@
                 try {
                     // 設定値の取得
                     const direction = Array.from(directionRadios).find(r => r.checked).value; // 'vertical' or 'horizontal'
-                    const limitPixels = parseInt(limitPixelsInput.value, 10) || 2000;
+                    const canvasWidth = parseInt(canvasWidthInput.value, 10) || 1920;
+                    const canvasHeight = parseInt(canvasHeightInput.value, 10) || 1080;
                     const padding = parseInt(paddingPixelsInput.value, 10) || 0;
                     const backgroundColor = bgColorInput.value;
 
-                    // 配置計算
-                    let accumulatedSize = 0;
-                    let poolIndex = 0;
-                    const layoutItems = []; // { imgObj, x, y, width, height }
-                    
-                    // 配置シミュレーション
-                    for (let i = 0; i < 1000; i++) {
-                        const mediaItem = mediaPool[poolIndex];
-                        const itemSize = (direction === 'vertical' ? mediaItem.height : mediaItem.width) + (padding * 2);
+                    // リサイズ設定の取得
+                    const isResizeEnabled = resizeEnableCheckbox.checked;
+                    const resizeTarget = Array.from(resizeTargetRadios).find(r => r.checked)?.value || 'width';
+                    const resizeValue = parseInt(resizeValueInput.value, 10) || 1000;
 
-                        if (accumulatedSize > 0 && accumulatedSize + itemSize > limitPixels) {
-                            break;
+                    // アイテムの寸法準備
+                    const preparedItems = mediaPool.map(item => {
+                        let itemWidth = item.width;
+                        let itemHeight = item.height;
+
+                        if (isResizeEnabled) {
+                            if (resizeTarget === 'width') {
+                                const scale = resizeValue / item.width;
+                                itemWidth = resizeValue;
+                                itemHeight = Math.round(item.height * scale);
+                            } else {
+                                const scale = resizeValue / item.height;
+                                itemHeight = resizeValue;
+                                itemWidth = Math.round(item.width * scale);
+                            }
                         }
+                        return { ...item, w: itemWidth, h: itemHeight };
+                    });
 
-                        layoutItems.push({
-                            ...mediaItem,
-                            layoutSize: itemSize
-                        });
-
-                        accumulatedSize += itemSize;
-                        poolIndex = (poolIndex + 1) % mediaPool.length;
-                        if (accumulatedSize >= limitPixels) break;
-                    }
-
-                    if (layoutItems.length === 0) {
-                        clearCanvas();
-                        canvasPlaceholder.textContent = "制限サイズが小さすぎて画像が入リません";
-                        canvasPlaceholder.classList.remove('hidden');
-                        return;
-                    }
-
-                    // キャンバス全体のサイズ決定
-                    let canvasWidth, canvasHeight;
-
-                    if (direction === 'vertical') {
-                        const maxW = Math.max(...layoutItems.map(item => item.width));
-                        canvasWidth = maxW;
-                        canvasHeight = accumulatedSize;
-                    } else {
-                        const maxH = Math.max(...layoutItems.map(item => item.height));
-                        canvasWidth = accumulatedSize;
-                        canvasHeight = maxH;
-                    }
-
-                    // キャンバスリサイズ
+                    // キャンバス初期化（サイズ固定）
                     canvas.width = canvasWidth;
                     canvas.height = canvasHeight;
-
-                    // 描画処理 (背景)
                     ctx.fillStyle = backgroundColor;
                     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-                    // 画像描画
-                    let currentPos = 0;
-                    
-                    for (const item of layoutItems) {
+                    // レイアウト配置計算 & 描画リスト作成
+                    const drawList = [];
+                    // 四方の余白をなくすため、0から開始
+                    let currentX = 0;
+                    let currentY = 0;
+                    let lineMaxThickness = 0; // 行の高さ(横書き時) または 列の幅(縦書き時)
+
+                    let poolIndex = 0;
+                    let safetyCounter = 0;
+                    const MAX_ITEMS = 5000; // 無限ループ防止
+
+                    if (direction === 'horizontal') {
+                        // 横書き (Z型)
+                        while (currentY < canvasHeight && safetyCounter < MAX_ITEMS) {
+                             const item = preparedItems[poolIndex];
+
+                             // X方向の余白：既に同じ行にアイテムがある場合のみ適用
+                             const gapX = (currentX > 0) ? padding : 0;
+                             
+                             // 改行判定
+                             // 現在位置 + 余白 + 画像幅 がキャンバス幅を超える場合
+                             if (currentX + gapX + item.w > canvasWidth) {
+                                 // 改行処理
+                                 currentX = 0;
+                                 // Y方向の余白：既に前の行がある場合のみ適用（ここは1行目以降になるので、前の行の高さ > 0 なら適用）
+                                 // ただし、lineMaxThicknessが0（何も配置できてない）の場合はpadding不要だが、通常ありえない
+                                 const gapY = (lineMaxThickness > 0) ? padding : 0;
+                                 
+                                 currentY += lineMaxThickness + gapY;
+                                 lineMaxThickness = 0;
+                                 
+                                 // 見切れチェック: 改行後のY位置 + 画像高さ がキャンバス高さを超える場合
+                                 if (currentY + item.h > canvasHeight) {
+                                     break; // 終了
+                                 }
+                                 
+                                 // 改行してもX幅が足りない場合（画像幅 > キャンバス幅）
+                                 if (item.w > canvasWidth) {
+                                     break; // 終了（またはスキップ）
+                                 }
+                             } else {
+                                 // 見切れチェック (Y方向): 配置しようとしている画像が下にはみ出る場合
+                                 // 1行目の配置でもここでチェックが必要
+                                 if (currentY + item.h > canvasHeight) {
+                                     break; // 終了
+                                 }
+                             }
+                             
+                             // 配置座標決定（改行直後ならcurrentXは0、そうでなければ直前の画像の右端）
+                             // 改行直後ならgapXは再計算が必要（0になる）
+                             const finalGapX = (currentX > 0) ? padding : 0;
+
+                             // 配置
+                             drawList.push({ ...item, x: currentX + finalGapX, y: currentY });
+
+                             // 次の位置更新
+                             currentX += finalGapX + item.w;
+                             
+                             // 行の最大高さ更新
+                             if (item.h > lineMaxThickness) {
+                                 lineMaxThickness = item.h;
+                             }
+
+                             // インデックス更新
+                             poolIndex = (poolIndex + 1) % preparedItems.length;
+                             safetyCounter++;
+                        }
+
+                    } else {
+                        // 縦書き (N型)
+                        while (currentX < canvasWidth && safetyCounter < MAX_ITEMS) {
+                             const item = preparedItems[poolIndex];
+                             
+                             // Y方向の余白：既に同じ列にアイテムがある場合のみ適用
+                             const gapY = (currentY > 0) ? padding : 0;
+
+                             // 改列判定
+                             if (currentY + gapY + item.h > canvasHeight) {
+                                 currentY = 0;
+                                 // X方向の余白
+                                 const gapX = (lineMaxThickness > 0) ? padding : 0;
+                                 
+                                 currentX += lineMaxThickness + gapX;
+                                 lineMaxThickness = 0;
+
+                                 // 見切れチェック: 改列後のX位置 + 画像幅 がキャンバス幅を超える場合
+                                 if (currentX + item.w > canvasWidth) {
+                                     break;
+                                 }
+                                 
+                                 if (item.h > canvasHeight) {
+                                     break;
+                                 }
+                             } else {
+                                 // 見切れチェック (X方向)
+                                 if (currentX + item.w > canvasWidth) {
+                                     break;
+                                 }
+                             }
+
+                             const finalGapY = (currentY > 0) ? padding : 0;
+
+                             drawList.push({ ...item, x: currentX, y: currentY + finalGapY });
+
+                             currentY += finalGapY + item.h;
+
+                             if (item.w > lineMaxThickness) {
+                                 lineMaxThickness = item.w;
+                             }
+
+                             poolIndex = (poolIndex + 1) % preparedItems.length;
+                             safetyCounter++;
+                        }
+                    }
+
+                    // 画像描画実行
+                    for (const item of drawList) {
                         const img = new Image();
-                        // 画像ロード待機とエラーハンドリング
                         await new Promise((resolve, reject) => {
                             img.onload = resolve;
                             img.onerror = reject;
@@ -534,17 +683,7 @@
                         }).catch(e => console.error("Image load error", e));
 
                         if (img.complete && img.naturalWidth !== 0) {
-                            if (direction === 'vertical') {
-                                const drawX = (canvasWidth - item.width) / 2;
-                                const drawY = currentPos + padding;
-                                ctx.drawImage(img, drawX, drawY);
-                                currentPos += item.height + (padding * 2);
-                            } else {
-                                const drawX = currentPos + padding;
-                                const drawY = (canvasHeight - item.height) / 2;
-                                ctx.drawImage(img, drawX, drawY);
-                                currentPos += item.width + (padding * 2);
-                            }
+                            ctx.drawImage(img, item.x, item.y, item.w, item.h);
                         }
                     }
 
